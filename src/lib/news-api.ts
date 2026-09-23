@@ -1,31 +1,17 @@
 import { cache } from "react";
-import { CATEGORIES } from "./types";
-import type { Article, Category } from "./types";
+import { TOPICS } from "./types";
+import type { Article, Topic } from "./types";
 
-// NewsData.io API categories for the /latest and /news endpoints.
-// Maps our UI categories to their wire category names.
-export const NEWSDATA_CATEGORY: Record<Category, string> = {
-  general: "top",
-  business: "business",
-  entertainment: "entertainment",
-  health: "health",
-  science: "science",
-  sports: "sports",
-  technology: "technology",
-};
+export const NEWSDATA_ENV_CATEGORY = "environment";
 
-const NEWSDATA_CATEGORY_LOOKUP: Record<string, Category> = {
-  top: "general",
-  world: "general",
-  politics: "general",
-  other: "general",
-  regional: "general",
-  business: "business",
-  entertainment: "entertainment",
-  health: "health",
-  science: "science",
-  sports: "sports",
-  technology: "technology",
+export const TOPIC_QUERY: Record<Topic, string> = {
+  environment: "",
+  climate: "climate",
+  energy: "energy",
+  wildlife: "wildlife",
+  oceans: "ocean",
+  pollution: "pollution",
+  weather: "weather",
 };
 
 interface RawArticle {
@@ -61,16 +47,7 @@ function toIso(pubDate: string, tz: string): string {
   return new Date().toISOString();
 }
 
-function inferCategory(tags: string[] | null | undefined, fallback: Category): Category {
-  for (const tag of tags ?? []) {
-    const mapped = NEWSDATA_CATEGORY_LOOKUP[tag.toLowerCase()];
-    if (mapped) return mapped;
-  }
-  return fallback;
-}
-
-export function normalizeArticle(raw: RawArticle, requestedCategory: Category): Article {
-  const category = inferCategory(raw.category, requestedCategory);
+export function normalizeArticle(raw: RawArticle, topic: Topic): Article {
   return {
     id: raw.article_id ?? hashId(raw.link),
     source: raw.source_name ?? "Unknown",
@@ -80,7 +57,7 @@ export function normalizeArticle(raw: RawArticle, requestedCategory: Category): 
     url: raw.link,
     imageUrl: raw.image_url ?? null,
     publishedAt: toIso(raw.pubDate, raw.pubDateTZ),
-    category,
+    category: topic,
     content: raw.content && !raw.content.includes("PAID PLANS") ? raw.content : "",
   };
 }
@@ -154,10 +131,10 @@ function dedupeAndTrim(articles: Article[]): Article[] {
 }
 
 export async function fetchHeadlines(
-  category: Category = "general",
+  topic: Topic = "environment",
   options: { cacheTtlMs?: number } = {}
 ): Promise<Article[]> {
-  const key = `headlines:${category}`;
+  const key = `headlines:${topic}`;
   const cached = readCache(key);
   if (cached) return cached;
 
@@ -165,11 +142,13 @@ export async function fetchHeadlines(
     country: "us",
     language: "en",
     size: "10",
-    category: NEWSDATA_CATEGORY[category],
+    category: NEWSDATA_ENV_CATEGORY,
   });
+  const topicQuery = TOPIC_QUERY[topic];
+  if (topicQuery) params.set("q", topicQuery);
 
   const raw = await fetchNewsData(params);
-  const articles = dedupeAndTrim(raw.map((a) => normalizeArticle(a, category)));
+  const articles = dedupeAndTrim(raw.map((a) => normalizeArticle(a, topic)));
 
   writeCache(key, articles, options.cacheTtlMs ?? NEWSAPI_DEFAULT_TTL_MS);
   return articles;
@@ -187,11 +166,12 @@ export async function searchNews(
     country: "us",
     language: "en",
     size: "10",
+    category: NEWSDATA_ENV_CATEGORY,
     q: query.trim().slice(0, 100),
   });
 
   const raw = await fetchNewsData(params);
-  const articles = dedupeAndTrim(raw.map((a) => normalizeArticle(a, "general")));
+  const articles = dedupeAndTrim(raw.map((a) => normalizeArticle(a, "environment")));
 
   writeCache(key, articles, options.cacheTtlMs ?? NEWSAPI_DEFAULT_TTL_MS);
   return articles;
@@ -212,4 +192,4 @@ export function formatRelativeTime(iso: string): string {
 }
 
 export const getTopHeadlinesCached = cache(fetchHeadlines);
-export { CATEGORIES };
+export { TOPICS };

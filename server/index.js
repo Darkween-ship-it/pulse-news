@@ -7,20 +7,12 @@ const POLL_MS = Number(process.env.POLL_MS || 5 * 60 * 1000);
 const WARM_POLL_MS = Number(process.env.WARM_POLL_MS || 30 * 60 * 1000);
 const MAX_ARTICLES = 200;
 
-const ALL_CATEGORIES = [
-  "top",
-  "business",
-  "entertainment",
-  "health",
-  "science",
-  "sports",
-  "technology",
-];
+const ALL_CATEGORIES = ["environment"];
 
 // When clients are connected, poll only these categories (1 NewsData credit
 // each; free plan = 200 credits/day, 30 credits/15 min).
 const ACTIVE_CATEGORIES =
-  (process.env.ACTIVE_CATEGORIES || "top")
+  (process.env.ACTIVE_CATEGORIES || "environment")
     .split(",")
     .map((c) => c.trim())
     .filter(Boolean);
@@ -41,18 +33,21 @@ function toIso(pubDate, tz) {
   return Number.isNaN(parsed.getTime()) ? new Date().toISOString() : parsed.toISOString();
 }
 
+// The platform only surfaces environmental news, so every NewsData tag
+// collapses to the "environment" topic.
 const KNOWN_CATEGORY_LOOKUP = {
-  top: "general",
-  world: "general",
-  politics: "general",
-  other: "general",
-  regional: "general",
-  business: "business",
-  entertainment: "entertainment",
-  health: "health",
-  science: "science",
-  sports: "sports",
-  technology: "technology",
+  top: "environment",
+  world: "environment",
+  politics: "environment",
+  other: "environment",
+  regional: "environment",
+  business: "environment",
+  entertainment: "environment",
+  health: "environment",
+  science: "environment",
+  sports: "environment",
+  technology: "environment",
+  environment: "environment",
 };
 
 function normalize(raw, fallbackCategory) {
@@ -133,7 +128,7 @@ async function pollCategory(store, category) {
       console.error(`[${category}] NewsData status: ${data.status}`);
       return [];
     }
-    const fallback = KNOWN_CATEGORY_LOOKUP[category] || "general";
+    const fallback = KNOWN_CATEGORY_LOOKUP[category] || "environment";
     const articles = (data.results || []).map((a) => normalize(a, fallback));
     const fresh = store.merge(articles);
     if (fresh.length) {

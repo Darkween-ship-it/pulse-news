@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { fetchHeadlines, searchNews } from "@/lib/news-api";
-import { CATEGORIES } from "@/lib/types";
+import { TOPICS } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -15,9 +15,9 @@ export async function GET(request: NextRequest) {
       return Response.json({ articles, total: articles.length });
     }
 
-    const safe = CATEGORIES.includes(category as never)
+    const safe = TOPICS.includes(category as never)
       ? (category as never)
-      : "general";
+      : "environment";
     const articles = await fetchHeadlines(safe);
     return Response.json({ articles, total: articles.length, category: safe });
   } catch (err) {

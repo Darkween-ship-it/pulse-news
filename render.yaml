@@ -15,7 +15,7 @@ services:
       - key: NEWSDATA_API_KEY
         sync: false
       - key: ACTIVE_CATEGORIES
-        value: top
+        value: environment
       - key: POLL_MS
         value: "300000"
       - key: WARM_POLL_MS

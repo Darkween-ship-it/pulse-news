@@ -9,7 +9,7 @@ export default async function Home() {
   let apiError: string | null = null;
 
   try {
-    initialArticles = await getTopHeadlinesCached("general");
+    initialArticles = await getTopHeadlinesCached("environment");
   } catch (err) {
     apiError = err instanceof Error ? err.message : "Failed to load news";
   }

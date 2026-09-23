@@ -1,12 +1,48 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CATEGORIES, CATEGORY_COLORS } from "@/lib/types";
-import type { Article, Category } from "@/lib/types";
+import { TOPICS, TOPIC_COLORS } from "@/lib/types";
+import type { Article, Topic } from "@/lib/types";
 import { useLiveNews } from "@/lib/useLiveNews";
 import { TickerBar } from "@/components/TickerBar";
 import { StoryCard } from "@/components/StoryCard";
 import { StoryModal } from "@/components/StoryModal";
+
+const TOPIC_KEYWORDS: Record<Exclude<Topic, "environment">, string[]> = {
+  climate: [
+    "climate", "warming", "carbon", "emission", "greenhouse", "heatwave",
+    "drought", "sea level", "glacier", "fossil fuel", "methane",
+  ],
+  energy: [
+    "energy", "solar", "wind", "renewable", "electric", "battery", "grid",
+    "nuclear", "coal", "gas", "hydrogen", "power plant", "evs",
+  ],
+  wildlife: [
+    "wildlife", "species", "animal", "endangered", "bird", "whale", "fish",
+    "forest", "habitat", "conservation", "ecosystem", "biodiversity",
+    "insect", "bee", "coral", "elephant", "panda", "wolf",
+  ],
+  oceans: [
+    "ocean", "sea", "marine", "coast", "beach", "reef", "water", "river",
+    "lake", "wetland", "mangrove", "shore", "sewage",
+  ],
+  pollution: [
+    "pollution", "plastic", "waste", "toxic", "emission", "smog", "sewage",
+    "chemical", "trash", "contamin", "spill", "landfill", "recycl",
+  ],
+  weather: [
+    "weather", "forecast", "storm", "rain", "snow", "heat", "cold",
+    "hurricane", "temperature", "flood", "wildfire", "tornado", "wildfire",
+  ],
+};
+
+const FILTER_TOPICS = TOPICS.filter((t) => t !== "environment");
+
+function matchesTopic(article: Article, topic: Exclude<Topic, "environment">): boolean {
+  if (article.category === topic) return true;
+  const haystack = `${article.title} ${article.description}`.toLowerCase();
+  return TOPIC_KEYWORDS[topic].some((k) => haystack.includes(k));
+}
 
 function matchesQuery(article: Article, query: string): boolean {
   const q = query.trim().toLowerCase();
@@ -19,18 +55,18 @@ function matchesQuery(article: Article, query: string): boolean {
 }
 
 export function NewsApp({ initialArticles }: { initialArticles: Article[] }) {
-  const [category, setCategory] = useState<Category | "all">("all");
+  const [topic, setTopic] = useState<Topic | "all">("all");
   const [query, setQuery] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [selected, setSelected] = useState<Article | null>(null);
   const topRef = useRef<HTMLDivElement>(null);
 
   const { articles, status, liveCount, lastUpdated, newIds, acknowledge, fetchMore } =
-    useLiveNews(initialArticles, category);
+    useLiveNews(initialArticles, topic);
 
   useEffect(() => {
-    if (category !== "all") void fetchMore({ category });
-  }, [category, fetchMore]);
+    if (topic !== "all") void fetchMore({ category: topic });
+  }, [topic, fetchMore]);
 
   const applyAndAcknowledge = () => {
     acknowledge();
@@ -41,12 +77,12 @@ export function NewsApp({ initialArticles }: { initialArticles: Article[] }) {
 
   const visible = useMemo(() => {
     let list = articles;
-    if (category !== "all") {
-      list = list.filter((a) => a.category === category);
+    if (topic !== "all") {
+      list = list.filter((a) => matchesTopic(a, topic as Exclude<Topic, "environment">));
     }
     list = list.filter((a) => matchesQuery(a, query));
     return list;
-  }, [articles, category, query]);
+  }, [articles, topic, query]);
 
   return (
     <div className="min-h-screen">
@@ -63,15 +99,16 @@ export function NewsApp({ initialArticles }: { initialArticles: Article[] }) {
                 fill="currentColor"
                 aria-hidden
               >
-                <path d="M3 9h18v2H3zm0 4h18v2H3zm0 4h18v2H3zM3 5h18v2H3z" />
+                <path d="M12 2c1 3 4 4 4 8 0 4-2.5 6-4 6V2Z" />
+                <path d="M5 10c-1 2-1 4-1 6 0 3 2 5 4 5h8c2 0 4-2 4-5 0-1 0-2-.5-3.5-2 .5-3 .5-4.5-.5-2 1.5-5 2-10-2Z" />
               </svg>
             </div>
             <div>
               <h1 className="font-display text-2xl font-extrabold uppercase leading-none tracking-tight text-white">
-                Pulse<span className="text-[var(--accent)]">.</span>
+                Pulse<span className="text-[var(--accent)]"> Earth</span>
               </h1>
               <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-zinc-500">
-                Real-time news
+                Environmental news live
               </p>
             </div>
           </div>
@@ -105,28 +142,28 @@ export function NewsApp({ initialArticles }: { initialArticles: Article[] }) {
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 pb-4 sm:px-6">
           <div className="flex flex-wrap items-center gap-2">
             <button
-              onClick={() => setCategory("all")}
+              onClick={() => setTopic("all")}
               className={`rounded-full border px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider transition ${
-                category === "all"
+                topic === "all"
                   ? "border-transparent bg-white text-zinc-950"
                   : "border-zinc-700 text-zinc-300 hover:border-zinc-500"
               }`}
             >
               All
             </button>
-            {CATEGORIES.map((c) => {
-              const color = CATEGORY_COLORS[c];
-              const active = category === c;
+            {FILTER_TOPICS.map((t) => {
+              const color = TOPIC_COLORS[t];
+              const active = topic === t;
               return (
                 <button
-                  key={c}
-                  onClick={() => setCategory(c)}
+                  key={t}
+                  onClick={() => setTopic(t)}
                   className={`rounded-full border px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider transition ${
                     active ? "border-transparent" : "border-zinc-700 text-zinc-300 hover:border-zinc-500"
                   }`}
                   style={active ? { backgroundColor: color, color: "#0a0e1a" } : undefined}
                 >
-                  {c}
+                  {t}
                 </button>
               );
             })}
@@ -154,7 +191,7 @@ export function NewsApp({ initialArticles }: { initialArticles: Article[] }) {
             <input
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Search headlines, sources, topics…"
+              placeholder="Search environmental news…"
               className="w-full rounded-xl border border-zinc-800 bg-zinc-900 py-2.5 pl-10 pr-28 text-sm text-white placeholder-zinc-500 outline-none transition focus:border-zinc-600 focus:bg-zinc-800/80"
             />
             <button
@@ -182,10 +219,10 @@ export function NewsApp({ initialArticles }: { initialArticles: Article[] }) {
         ) : (
           <div className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3">
             <span className="text-sm font-semibold text-zinc-300">
-              {visible.length} stories on the wire
+              {visible.length} environmental stories on the wire
             </span>
             <span className="text-[11px] uppercase tracking-widest text-zinc-600">
-              {category}&nbsp;/&nbsp;{query || "top"}
+              {topic}&nbsp;/&nbsp;{query || "environment"}
             </span>
           </div>
         )}
@@ -195,7 +232,7 @@ export function NewsApp({ initialArticles }: { initialArticles: Article[] }) {
       <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
         {visible.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-24 text-center">
-            <span className="text-5xl">📡</span>
+            <span className="text-5xl">🌍</span>
             <p className="font-display text-xl font-bold text-zinc-300">
               No stories match — searching…</p>
             <p className="text-sm text-zinc-500">New heads will stream in automatically.</p>
@@ -217,7 +254,7 @@ export function NewsApp({ initialArticles }: { initialArticles: Article[] }) {
 
       <footer className="border-t border-zinc-800 py-8 text-center text-xs text-zinc-600">
         <p className="mb-1 font-display font-bold uppercase tracking-[0.3em] text-zinc-500">
-          Pulse — real-time news
+          Pulse Earth — environmental news
         </p>
         <p>
           WebSocket pushed · {articles.length} cached stories · News via NewsData.io

@@ -18,9 +18,9 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Pulse News — Live",
+  title: "Pulse Earth — Environmental News, Live",
   description:
-    "A real-time news platform. Stories stream in the moment they hit the wire.",
+    "Real-time environmental news. Climate, energy, wildlife and ocean stories stream in the moment they hit the wire.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

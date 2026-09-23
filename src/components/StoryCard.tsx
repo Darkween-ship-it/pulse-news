@@ -1,4 +1,4 @@
-import { CATEGORY_COLORS } from "@/lib/types";
+import { TOPIC_COLORS } from "@/lib/types";
 import type { Article } from "@/lib/types";
 import { formatRelativeTime } from "@/lib/news-api";
 
@@ -13,7 +13,7 @@ export function StoryCard({
   onOpen: (article: Article) => void;
   rank: number;
 }) {
-  const color = CATEGORY_COLORS[article.category] ?? "#a855f7";
+  const color = TOPIC_COLORS[article.category] ?? "#10b981";
   const imageUrl = article.imageUrl;
 
   return (

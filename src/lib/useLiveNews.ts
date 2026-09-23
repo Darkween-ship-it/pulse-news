@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { Article, Category, WsMessage } from "@/lib/types";
+import type { Article, Topic, WsMessage } from "@/lib/types";
 
 type Status = "connecting" | "live" | "fallback";
 
@@ -12,7 +12,7 @@ export interface LiveNewsState {
   lastUpdated: Date | null;
   newIds: string[];
   acknowledge: () => void;
-  fetchMore: (params: { category?: Category; q?: string }) => Promise<void>;
+  fetchMore: (params: { category?: Topic; q?: string }) => Promise<void>;
 }
 
 const POLL_MS = 20_000;
@@ -36,18 +36,18 @@ function wsUrlForBrowser(): string | null {
   return null;
 }
 
-export function useLiveNews(initial: Article[], category: Category | "all") {
+export function useLiveNews(initial: Article[], topic: Topic | "all") {
   const [articles, setArticles] = useState(initial);
   const [status, setStatus] = useState<Status>("connecting");
   const [liveCount, setLiveCount] = useState(0);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [newIds, setNewIds] = useState<string[]>([]);
-  const categoryRef = useRef<Category | "all">(category);
+  const topicRef = useRef<Topic | "all">(topic);
   const seenRef = useRef<Set<string>>(new Set(initial.map((a) => a.id)));
 
   useEffect(() => {
-    categoryRef.current = category;
-  }, [category]);
+    topicRef.current = topic;
+  }, [topic]);
 
   const applyIncoming = useCallback((incoming: Article[], markFresh = true) => {
     const fresh = incoming.filter((a) => !seenRef.current.has(a.id));
@@ -68,7 +68,7 @@ export function useLiveNews(initial: Article[], category: Category | "all") {
   }, []);
 
   const fetchMore = useCallback(
-    async (params: { category?: Category; q?: string }) => {
+    async (params: { category?: Topic; q?: string }) => {
       const sp = new URLSearchParams();
       if (params.q) sp.set("q", params.q);
       else if (params.category) sp.set("category", params.category);
@@ -100,7 +100,7 @@ export function useLiveNews(initial: Article[], category: Category | "all") {
       setStatus("fallback");
       const poll = async () => {
         try {
-          const q = categoryRef.current === "all" ? "" : `category=${categoryRef.current}`;
+          const q = topicRef.current === "all" ? "" : `category=${topicRef.current}`;
           const res = await fetch(`/api/news${q ? `?${q}` : ""}`, {
             cache: "no-store",
           });

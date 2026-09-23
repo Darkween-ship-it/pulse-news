@@ -1,30 +1,30 @@
-export type Category =
-  | "general"
-  | "business"
-  | "entertainment"
-  | "health"
-  | "science"
-  | "sports"
-  | "technology";
+export type Topic =
+  | "environment"
+  | "climate"
+  | "energy"
+  | "wildlife"
+  | "oceans"
+  | "pollution"
+  | "weather";
 
-export const CATEGORIES: Category[] = [
-  "general",
-  "business",
-  "entertainment",
-  "health",
-  "science",
-  "sports",
-  "technology",
+export const TOPICS: Topic[] = [
+  "environment",
+  "climate",
+  "energy",
+  "wildlife",
+  "oceans",
+  "pollution",
+  "weather",
 ];
 
-export const CATEGORY_COLORS: Record<Category, string> = {
-  general: "#f43f5e",
-  business: "#f59e0b",
-  entertainment: "#a855f7",
-  health: "#10b981",
-  science: "#3b82f6",
-  sports: "#06b6d4",
-  technology: "#f97316",
+export const TOPIC_COLORS: Record<Topic, string> = {
+  environment: "#10b981",
+  climate: "#f59e0b",
+  energy: "#facc15",
+  wildlife: "#22c55e",
+  oceans: "#0ea5e9",
+  pollution: "#ef4444",
+  weather: "#38bdf8",
 };
 
 export interface Article {
@@ -36,7 +36,7 @@ export interface Article {
   url: string;
   imageUrl: string | null;
   publishedAt: string;
-  category: Category;
+  category: Topic;
   content: string | null;
 }
 
