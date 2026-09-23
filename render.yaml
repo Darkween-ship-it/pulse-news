@@ -1,0 +1,22 @@
+# Render blueprint for the WebSocket broadcaster.
+# Docs: https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: pulse-news-ws
+    runtime: node
+    plan: free
+    rootDir: server
+    buildCommand: npm install
+    startCommand: node index.js
+    autoDeploy: true
+    healthCheckPath: /
+    envVars:
+      # Set this manually in Render dashboard → Environment
+      - key: NEWSDATA_API_KEY
+        sync: false
+      - key: ACTIVE_CATEGORIES
+        value: top
+      - key: POLL_MS
+        value: "300000"
+      - key: WARM_POLL_MS
+        value: "1800000"
